@@ -27,4 +27,5 @@ pip3 install pymavlink mavproxy
 pip3 install MAVproxy
 pip3 install opencv-python
 pip3 install GitPython
+pip3 install termcolor
 ```

@@ -320,6 +320,7 @@ def gps_info(tlog, types = gpstypes):
         output = StringBuilder()
         data = []
         mavmsg = tlog.recv_match(type=types, condition=None)
+        gps_status_err = False
         if mavmsg is None:
             break
         if mavmsg.get_type() == 'GPS':
@@ -336,22 +337,17 @@ def gps_info(tlog, types = gpstypes):
             output.append("  ")
             # according to the GPS status a proper color is displayed
             if status == 0:
+                gps_status_err = True
+                output.append(str(tmstmp))
+                output.append("  ")
                 output.append(colored(str(gps_desc_dict.get(status)),'red'))
+                print(output)
             elif status == 1:
+                gps_status_err = True
+                output.append(str(tmstmp))
+                output.append("  ")
                 output.append(colored(str(gps_desc_dict.get(status)),'yellow'))
-            elif status == 2:
-                output.append(colored(str(gps_desc_dict.get(status)),'yellow'))
-            elif status == 3:
-                output.append(colored(str(gps_desc_dict.get(status)),'green'))
-            output.append("\t")
-            output.append(str(lat))
-            output.append("\t")
-            output.append(str(lng))
-            output.append("\t")
-            output.append(str(relalt))
-            output.append("\t")
-            output.append(str(alt))
-            print(output)
+                print(output)
             # timelining
             data.append(tmstmp)
             data.append(gps_desc_dict.get(status))
@@ -361,6 +357,9 @@ def gps_info(tlog, types = gpstypes):
             data.append(relalt)
             extdata_list.append(data)
             gps_list.append(data)
+    if not gps_status_err:
+      output.append(colored("No GPS signal loss",'green'))
+      print(output)
     # reset back to the begin of log.bin file
     tlog.rewind()
 
@@ -559,7 +558,7 @@ def get_MAVmsgs(args):
     curr_info(tlog)
     print("\n>CMD Extraction")
     cmd_info(tlog)
-    print("\n>GPS Extraction")
+    print("\n>GPS Status Extraction")
     gps_info(tlog)
     print("\n>CMD Execution")
     cmd_execution()

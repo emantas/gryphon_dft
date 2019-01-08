@@ -20,13 +20,13 @@ err_dict = {1: "Main", 2: "Radio", 3: "Compass", 4: "Optical flow", 5: "Throttle
             10: "Flight Mode", 11: "GPS", 12: "Crash Check"}
 
 # FMT header declared as types for usage in the proper function FORMAT: Name , Format , ColumsVals
-gpstypes = set(['GPS', 'BIHBcLLeeEefI', 'Status','TimeMS','Week','NSats','HDop','Lat','Lng','RelAlt','Alt','Spd','GCrs','VZ','T'])
+gpstypes = set(['GPS', 'QBIHBcLLeeEefB', 'TimeUS', 'Status', 'GMS', 'GWk', 'NSats', 'HDop', 'Lat', 'Lng', 'RAlt', 'Alt', 'Spd', 'GCrs', 'VZ', 'U'])
 msgtypes = set(['MSG', 'Z', 'Message'])
 evtypes = set(['EV', 'B', 'Id'])
 parmtypes = set(['PARM', 'Nf', 'Name', 'Value'])
-modetypes = set(['MODE', 'Mh', 'Mode', 'ThrCrs'])
+modetypes = set(['MODE', 'Mh', 'Mode', 'ModeNum'])
 errtypes = set(['ERR', 'BB', 'Subsys','ECode'])
-cmdtypes = set(['CMD', 'IHHHfffffff', 'TimeMS', 'CTot', 'CNum', 'CId', 'Prm1', 'Prm2', 'Prm3', 'Prm4', 'Lat', 'Lng', 'Alt'])
+cmdtypes = set(['CMD', 'QHHHfffffff', 'TimeUS', 'CTot', 'CNum', 'CId', 'Prm1', 'Prm2', 'Prm3', 'Prm4', 'Lat', 'Lng', 'Alt'])
 currtypes = set(['CURR', 'IhIhhhf', 'TimeMS', 'ThrOut', 'ThrInt', 'Volt', 'Curr', 'Vcc', 'CurrTot'])
 
 # global variables for later data validation
@@ -196,14 +196,23 @@ def err_info(tlog, types = errtypes):
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             output.append(str(tmstmp))
             output.append("  ")
-            output.append(err_dict.get(err))
-            output.append("\t")
-            output.append(str(ecode))
+            if err in err_dict:
+                output.append(err_dict.get(err))
+                output.append("\t")
+                output.append(str(ecode))
+                # timelining
+                data.append(tmstmp)
+                data.append(str(err_dict.get(err)))
+                data.append(ecode)
+            else:
+                output.append("No Known Error")
+                output.append("\t")
+                output.append("No Known Error Code")
+                # timelining
+                data.append(tmstmp)
+                data.append("No Known Error")
+                data.append("No Known Error Code")
             print(output)
-            # timelining
-            data.append(tmstmp)
-            data.append(str(err_dict.get(err)))
-            data.append(ecode)
             extdata_list.append(data)
     tlog.rewind()
 
@@ -218,19 +227,19 @@ def mode_info(tlog, types = modetypes):
         if mavmsg.get_type() == 'MODE':
             # get the value as declared in the FMT set list
             mode = mode_dict.get(mavmsg.Mode)
-            thrcrs = mavmsg.ThrCrs
+            modenum = mavmsg.ModeNum
             # timestamp extraction
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             output.append(str(tmstmp))
             output.append("  ")
             output.append(str(mode))
             output.append("\t")
-            output.append(str(thrcrs))
+            output.append(str(modenum))
             print(output)
             # timelining
             data.append(tmstmp)
             data.append(mode)
-            data.append(thrcrs)
+            data.append(modenum)
             extdata_list.append(data)
     # reset back to the begin of log.bin file
     tlog.rewind()
@@ -329,7 +338,7 @@ def gps_info(tlog, types = gpstypes):
             status = mavmsg.Status
             # format float val to 2 decimal
             alt = "{0:.2f}".format(mavmsg.Alt)
-            relalt = "{0:.2f}".format(mavmsg.RelAlt)
+            relalt = "{0:.2f}".format(mavmsg.RAlt)
             # timestamp extraction
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             output.append(str(tmstmp))
@@ -373,6 +382,7 @@ def cmd_info(tlog, types = cmdtypes):
         if mavmsg is None:
             break
         if mavmsg.get_type() == 'CMD':
+            print(mavmsg)
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             cid = mavmsg.CId
             lat = mavmsg.Lat
@@ -556,11 +566,11 @@ def get_MAVmsgs(args):
     print("\n>ERROR Extraction")
     err_info(tlog)
     print("\n>CURRENT Extraction")
-    curr_info(tlog)
+    #curr_info(tlog)
     print("\n>CMD Extraction")
     cmd_info(tlog)
     print("\n>GPS Extraction")
-    gps_info(tlog)
+    #gps_info(tlog)
     print("\n>CMD Execution")
     cmd_execution()
     print("\n>CRC Verification")

@@ -306,7 +306,7 @@ def curr_anomaly_detection():
         thres_vcc = medvcc*thres_per_vcc
         thres_curr = medcurr*thres_per_curr
         # v[0] timestamp v[1] vcc_value       c[0] timestamp c[1] curr_value
-        if (v[1] < (medvcc - thres_vcc)) or (v[1] > (medvcc + thres_vcc)):
+        if (v[1] > (medvcc + thres_vcc)):
             vcc_ex_list.append([v[0],v[1]])
         if (c[1] < medcurr - thres_curr) or (c[1] > medcurr + thres_curr):
             c_ex_list.append([c[0],c[1]])
@@ -522,8 +522,9 @@ def crc_verification():
 # function to sort and display timeline events and create an timeline file
 def timeline_analysis(args):
     filename = args.strip('../')
+    filename = filename.replace("/","__")
     extdata_list.sort()
-    with open(filename+".analysis", 'w') as log:
+    with open(filename+".analysis", 'w+') as log:
         for item in extdata_list:
             output = StringBuilder()
             for i in item:
@@ -579,7 +580,6 @@ def get_MAVmsgs(args):
     timeline_analysis(args)
     print("\n>MAP View")
     mavflightview(args,map_options)
-
 
 def __main__():
     # parse the input data

@@ -497,6 +497,7 @@ def gps_altD_anomaly_detection():
             data.append("{0:.2f}".format(diff))
             extdata_list.append(data)
     if not alt_anomaly:
+        output = StringBuilder()
         output.append(colored("No Alt Anomaly Detected",'green'))
         print(output)
 

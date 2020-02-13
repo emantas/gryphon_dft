@@ -1,6 +1,6 @@
 # Gryphon Drone Forensics Tool
 
-Named after the mythical creature of mythology, this tool aims to extract critical events happened during the flight of an Unmanned Aerial System/Vehicle, running `Ardupilot` flight stack. This tool is part of the research paper `Gryphon: Forensics on Dataflash and Telemetry Logs`.
+Named after the mythical creature of mythology, this tool aims to extract critical events happened during the flight of an Unmanned Aerial System/Vehicle, running `Ardupilot` flight stack. This tool is part of the research paper `Gryphon: Forensics on Dataflash and Telemetry Logs`, presented in the 14th International Workshop on Security 2019 in Tokyo, Japan.
 
 This research methodology for analysing the Dataflash logs consists of 6 steps. Their scope starts from firmware integrity, and goes through trajectory, execution, and error analysis to reach low-level hardware logs and finish with timeline analysis. More precisely, the steps of our methodology are the following:
 
@@ -22,10 +22,8 @@ python3 gryphon.py <LOGFILE.bin>
 ```
 
 ### Dependencies
+`Warning` Make sure you have enough space (over 3GB) on `/tmp` as `wxPython` may cause problem during download
 ```
-pip3 install pymavlink mavproxy
-pip3 install MAVproxy
-pip3 install opencv-python
-pip3 install GitPython
-pip3 install termcolor
+apt install libgtk-3-dev python3-pip
+pip3 install pymavlink mavproxy opencv-python wxPython GitPython termcolor
 ```

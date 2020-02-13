@@ -256,7 +256,7 @@ def curr_info(tlog, types = currtypes):
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             volt = mavmsg.Volt
             curr = mavmsg.Curr
-            vcc = mavmsg.Vcc
+            #vcc = mavmsg.Vcc
             currtot = mavmsg.CurrTot
             output.append(str(tmstmp))
             output.append("  ")
@@ -266,7 +266,7 @@ def curr_info(tlog, types = currtypes):
             output.append("\t")
             output.append(str(curr))
             output.append("\t")
-            output.append(str(vcc))
+            #output.append(str(vcc))
             output.append("\t")
             output.append(str(currtot))
             # timelining
@@ -274,13 +274,13 @@ def curr_info(tlog, types = currtypes):
             data.append("CURR")
             data.append(str(volt))
             data.append(curr)
-            data.append(vcc)
+            #data.append(vcc)
             data.append(currtot)
             extdata_list.append(data)
             # record Board voltage and Total current drawn from battery to monitor for Anomalies
-            vcc_list.append([tmstmp,vcc])
+            #vcc_list.append([tmstmp,vcc])
             curr_list.append([tmstmp,curr])
-            print(output)
+            #print(output)
     tlog.rewind()
 
 # Detect Anomalies in Board voltage and Total current drawn from battery above decalred thresshold
@@ -299,23 +299,23 @@ def curr_anomaly_detection():
         medvcc += v[1]
         medcurr += c[1]
     # foramt float to 0 pressision
-    medvcc = medvcc / len(vcc_list)
+    #medvcc = medvcc / len(vcc_list)
     medcurr = medcurr / len(curr_list)
     # find anomalies in declared thresshold
     for v, c in zip(vcc_list, curr_list):
-        thres_vcc = medvcc*thres_per_vcc
+        #thres_vcc = medvcc*thres_per_vcc
         thres_curr = medcurr*thres_per_curr
         # v[0] timestamp v[1] vcc_value       c[0] timestamp c[1] curr_value
-        if (v[1] > (medvcc + thres_vcc)):
-            vcc_ex_list.append([v[0],v[1]])
+        #if (v[1] > (medvcc + thres_vcc)):
+            #vcc_ex_list.append([v[0],v[1]])
         if (c[1] < medcurr - thres_curr) or (c[1] > medcurr + thres_curr):
             c_ex_list.append([c[0],c[1]])
-    if not vcc_ex_list:
-        print(colored("No Board voltage Anonmaly Detected",'green'))
-    else:
-        print(colored("Board voltage Anonmaly Detected",'red'))
-        for v in vcc_ex_list:
-            print(v[0], "\t", v[1])
+    #if not vcc_ex_list:
+    #    print(colored("No Board voltage Anonmaly Detected",'green'))
+    #else:
+        #print(colored("Board voltage Anonmaly Detected",'red'))
+        #for v in vcc_ex_list:
+            #print(v[0], "\t", v[1])
     if not c_ex_list:
         print(colored("No Current drawn from the battery Anonmaly Detected",'green'))
     else:
@@ -339,7 +339,7 @@ def gps_info(tlog, types = gpstypes):
             status = mavmsg.Status
             # format float val to 2 decimal
             alt = "{0:.2f}".format(mavmsg.Alt)
-            relalt = "{0:.2f}".format(mavmsg.RAlt)
+            #relalt = "{0:.2f}".format(mavmsg.RAlt)
             # timestamp extraction
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             # according to the GPS status a proper color is displayed
@@ -361,7 +361,7 @@ def gps_info(tlog, types = gpstypes):
             data.append(lat)
             data.append(lng)
             data.append(alt)
-            data.append(relalt)
+            #data.append(relalt)
             extdata_list.append(data)
             gps_list.append(data)
     if not gps_status_err:
@@ -379,7 +379,7 @@ def cmd_info(tlog, types = cmdtypes):
         if mavmsg is None:
             break
         if mavmsg.get_type() == 'CMD':
-            print(mavmsg)
+            #print(mavmsg)
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             cid = mavmsg.CId
             lat = mavmsg.Lat
@@ -434,8 +434,8 @@ def cmd_execution():
                     # set the flag true and get the timestamp of the execution
                     executed = True
                     tmstmp = gpslocation[0]
-                    print(gpslocation)
-                    print(command)
+                    #print(gpslocation)
+                    #print(command)
             if executed:
                 output.append(tmstmp)
                 output.append("  ")
@@ -476,8 +476,8 @@ def gps_altD_anomaly_detection():
         cur_tmstmp = gps_list[i][0]
         next_tmstmp = gps_list[i+1][0]
         # get the current and next relalt
-        cur_relalt = float(gps_list[i][5])
-        next_relalt = float(gps_list[i+1][5])
+        cur_relalt = float(gps_list[i][4])
+        next_relalt = float(gps_list[i+1][4])
         # get the alt diff and display the anomaly
         diff = abs(cur_relalt - next_relalt)
         if diff >= offset:
@@ -578,7 +578,7 @@ def get_MAVmsgs(args):
     curr_anomaly_detection()
     print("\n>GPS Alt Anomaly Detection")
     gps_altD_anomaly_detection()
-    timeline_analysis(args)
+    #timeline_analysis(args)
     print("\n>MAP View")
     mavflightview(args,map_options)
 

@@ -22,10 +22,8 @@ python3 gryphon.py <LOGFILE.bin>
 ```
 
 ### Dependencies
+`Warning` Make sure you have enough space (over 3GB) on `/tmp` as `wxPython` may cause problem during download
 ```
-pip3 install pymavlink mavproxy
-pip3 install MAVproxy
-pip3 install opencv-python
-pip3 install GitPython
-pip3 install termcolor
+apt install libgtk-3-dev python3-pip
+pip3 install pymavlink mavproxy opencv-python wxPython GitPython termcolor
 ```

@@ -20,11 +20,11 @@ err_dict = {1: "Main", 2: "Radio", 3: "Compass", 4: "Optical flow", 5: "Throttle
             10: "Flight Mode", 11: "GPS", 12: "Crash Check"}
 
 # FMT header declared as types for usage in the proper function FORMAT: Name , Format , ColumsVals
-gpstypes = set(['GPS', 'BIHBcLLeeEefI', 'Status','TimeMS','Week','NSats','HDop','Lat','Lng','RelAlt','Alt','Spd','GCrs','VZ','T'])
+gpstypes = set(['GPS', 'QBIHBcLLefffB', 'GMS', 'GWk', 'NSats', 'HDop', 'Lat', 'Lng', 'Alt', 'Spd', 'GCrs', 'VZ', 'U'])
 msgtypes = set(['MSG', 'Z', 'Message'])
 evtypes = set(['EV', 'B', 'Id'])
 parmtypes = set(['PARM', 'Nf', 'Name', 'Value'])
-modetypes = set(['MODE', 'Mh', 'Mode', 'ThrCrs'])
+modetypes = set(['MODE', 'Mh', 'ModeNum', 'Rsn'])
 errtypes = set(['ERR', 'BB', 'Subsys','ECode'])
 cmdtypes = set(['CMD', 'IHHHfffffff', 'TimeMS', 'CTot', 'CNum', 'CId', 'Prm1', 'Prm2', 'Prm3', 'Prm4', 'Lat', 'Lng', 'Alt'])
 currtypes = set(['CURR', 'IhIhhhf', 'TimeMS', 'ThrOut', 'ThrInt', 'Volt', 'Curr', 'Vcc', 'CurrTot'])
@@ -35,7 +35,6 @@ hash_list = []
 extdata_list = []
 cmd_list = []
 gps_list = []
-vcc_list = []
 curr_list = []
 
 # object similar to the C# stringbuilder, for nice clean output
@@ -218,19 +217,19 @@ def mode_info(tlog, types = modetypes):
         if mavmsg.get_type() == 'MODE':
             # get the value as declared in the FMT set list
             mode = mode_dict.get(mavmsg.Mode)
-            thrcrs = mavmsg.ThrCrs
+            modenum = mavmsg.ModeNum
             # timestamp extraction
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             output.append(str(tmstmp))
             output.append("  ")
             output.append(str(mode))
             output.append("\t")
-            output.append(str(thrcrs))
+            output.append(str(modenum))
             print(output)
             # timelining
             data.append(tmstmp)
             data.append(mode)
-            data.append(thrcrs)
+            data.append(modenum)
             extdata_list.append(data)
     # reset back to the begin of log.bin file
     tlog.rewind()
@@ -247,7 +246,6 @@ def curr_info(tlog, types = currtypes):
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             volt = mavmsg.Volt
             curr = mavmsg.Curr
-            vcc = mavmsg.Vcc
             currtot = mavmsg.CurrTot
             output.append(str(tmstmp))
             output.append("  ")
@@ -257,56 +255,37 @@ def curr_info(tlog, types = currtypes):
             output.append("\t")
             output.append(str(curr))
             output.append("\t")
-            output.append(str(vcc))
-            output.append("\t")
             output.append(str(currtot))
             # timelining
             data.append(tmstmp)
             data.append("CURR")
             data.append(str(volt))
             data.append(curr)
-            data.append(vcc)
             data.append(currtot)
             extdata_list.append(data)
             # record Board voltage and Total current drawn from battery to monitor for Anomalies
-            vcc_list.append([tmstmp,vcc])
             curr_list.append([tmstmp,curr])
             print(output)
     tlog.rewind()
 
 # Detect Anomalies in Board voltage and Total current drawn from battery above decalred thresshold
 def curr_anomaly_detection():
-    # vcc & total current thresshold percentage
-    thres_per_vcc = 0.1
+    # total current thresshold percentage
     thres_per_curr = 0.1
-    # median values of vcc and curr
-    medvcc = 0
+    # median values curr
     medcurr = 0
     # list of values exceding thresshold
-    vcc_ex_list = []
     c_ex_list = []
     # find the median value of each one
-    for v, c in zip(vcc_list, curr_list):
-        medvcc += v[1]
+    for c in zip(curr_list):
         medcurr += c[1]
     # foramt float to 0 pressision
-    medvcc = medvcc / len(vcc_list)
     medcurr = medcurr / len(curr_list)
     # find anomalies in declared thresshold
-    for v, c in zip(vcc_list, curr_list):
-        thres_vcc = medvcc*thres_per_vcc
+    for c in zip(curr_list):
         thres_curr = medcurr*thres_per_curr
-        # v[0] timestamp v[1] vcc_value       c[0] timestamp c[1] curr_value
-        if (v[1] > (medvcc + thres_vcc)):
-            vcc_ex_list.append([v[0],v[1]])
         if (c[1] < medcurr - thres_curr) or (c[1] > medcurr + thres_curr):
             c_ex_list.append([c[0],c[1]])
-    if not vcc_ex_list:
-        print(colored("No Board voltage Anonmaly Detected",'green'))
-    else:
-        print(colored("Board voltage Anonmaly Detected",'red'))
-        for v in vcc_ex_list:
-            print(v[0], "\t", v[1])
     if not c_ex_list:
         print(colored("No Current drawn from the battery Anonmaly Detected",'green'))
     else:
@@ -330,7 +309,6 @@ def gps_info(tlog, types = gpstypes):
             status = mavmsg.Status
             # format float val to 2 decimal
             alt = "{0:.2f}".format(mavmsg.Alt)
-            relalt = "{0:.2f}".format(mavmsg.RelAlt)
             # timestamp extraction
             tmstmp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mavmsg._timestamp))
             output.append(str(tmstmp))
@@ -354,7 +332,6 @@ def gps_info(tlog, types = gpstypes):
             data.append(lat)
             data.append(lng)
             data.append(alt)
-            data.append(relalt)
             extdata_list.append(data)
             gps_list.append(data)
     if not gps_status_err:
@@ -468,8 +445,8 @@ def gps_altD_anomaly_detection():
         cur_tmstmp = gps_list[i][0]
         next_tmstmp = gps_list[i+1][0]
         # get the current and next relalt
-        cur_relalt = float(gps_list[i][5])
-        next_relalt = float(gps_list[i+1][5])
+        cur_relalt = float(gps_list[i][4])
+        next_relalt = float(gps_list[i+1][4])
         # get the alt diff and display the anomaly
         diff = abs(cur_relalt - next_relalt)
         if diff >= offset:
@@ -547,27 +524,27 @@ def get_MAVmsgs(args):
     #log_info(tlog)
     #fmt_info(tlog)
     print("\n>PARM Extraction")
-    parm_info(tlog)
+    #parm_info(tlog)
     print("\n>MSG Extraction")
-    msg_info(tlog)
+    #msg_info(tlog)
     print("\n>EVENT Extraction")
-    ev_info(tlog)
+    #ev_info(tlog)
     print("\n>MODE Extraction")
-    mode_info(tlog)
+    #mode_info(tlog)
     print("\n>ERROR Extraction")
-    err_info(tlog)
+    #err_info(tlog)
     print("\n>CURRENT Extraction")
-    curr_info(tlog)
+    #curr_info(tlog)
     print("\n>CMD Extraction")
-    cmd_info(tlog)
+    #cmd_info(tlog)
     print("\n>GPS Status Extraction")
     gps_info(tlog)
     print("\n>CMD Execution")
-    cmd_execution()
+    #cmd_execution()
     print("\n>CRC Verification")
-    crc_verification()
-    print("\n>CURR Anomaly Detection")
-    curr_anomaly_detection()
+    #crc_verification()
+    #print("\n>CURR Anomaly Detection")
+    #curr_anomaly_detection()
     print("\n>GPS Alt Anomaly Detection")
     gps_altD_anomaly_detection()
     timeline_analysis(args)

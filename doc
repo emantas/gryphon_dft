@@ -1,0 +1,56 @@
+#!/bin/bash
+
+#
+# A wrapper Bash bootstrap script to run and dispatch the GIPC
+# executable. It accepts all the options that the GIPC.class accepts.
+#
+# The script tries to locate gipc.jar or GIPC.class in various
+# directories, in certain order, and if it can't find either,
+# it bails out with an error.
+#
+# STDERR is saved into gipc.err.log in the current working
+# directory.
+#
+# Customize as needed.
+#
+# Author:
+#   Serguei Mokhov
+#   The GIPSY Research and Development Group
+#
+# Last modifications:
+#   $Id: gipc,v 1.6 2011/01/08 00:20:42 mokhov Exp $
+#
+
+CLASSPATH="$CLASSPATH:.:src:lib/marf.jar:marf.jar:lib/netcdfAll.jar:netcdfAll.jar"
+JAVA=java
+
+echo "Trying .class ..." >gipc.err.log
+$JAVA -cp $CLASSPATH gipsy.GIPC.GIPC $@ 2>>gipc.err.log
+
+if [ $? != 0 ]; then
+
+	echo "Trying /usr/bin/gipsy/gipc.jar ..." >>gipc.err.log
+	$JAVA -cp $CLASSPATH -jar /usr/bin/gipsy/gipc.jar $@ 2>>gipc.err.log
+
+	if [ $? != 0 ]; then
+
+		echo "Trying gipc.jar ..." >>gipc.err.log
+		$JAVA -cp $CLASSPATH -jar gipc.jar $@ 2>>gipc.err.log
+
+		if [ $? != 0 ]; then
+
+			echo "Trying src/gipsy/GIPC/gipc.jar ..." >>gipc.err.log
+			$JAVA -cp $CLASSPATH -jar src/gipsy/GIPC/gipc.jar $@ 2>>gipc.err.log
+
+			if [ $? != 0 ]; then
+				echo "gipc.jar or GIPC.class not found"
+				exit $?
+			fi
+
+		fi
+
+	fi
+
+fi
+
+# EOF
